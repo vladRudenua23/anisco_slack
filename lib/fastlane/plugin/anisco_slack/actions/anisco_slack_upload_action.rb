@@ -1,0 +1,66 @@
+require 'fastlane/action'
+require_relative '../helper/anisco_slack_helper'
+
+module Fastlane
+  module Actions
+    class AniscoSlackUploadAction < Action
+      def self.run(params)
+        uploader = Helper::AniscoSlackHelper.new(params[:bot_api_token])
+        uploader.upload_file(
+          params[:file_path],
+          channel_id: params[:channel_id],
+          initial_comment: params[:initial_comment]
+        )
+      end
+
+      def self.description
+        'Upload APK, AAB, and IPA files to Slack channels or direct messages using Slack external upload API'
+      end
+
+      def self.authors
+        ['vrudenia']
+      end
+
+      def self.details
+        'Accepts a Slack channel id, DM channel id, or member id starting with U and uploads the given build artifact using Slack external upload API'
+      end
+
+      def self.available_options
+        [
+          FastlaneCore::ConfigItem.new(
+            key: :file_path,
+            env_name: 'ANISCO_SLACK_FILE_PATH',
+            description: 'Path to file for upload',
+            optional: false,
+            type: String
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :channel_id,
+            env_name: 'ANISCO_SLACK_CHANNEL_ID',
+            description: 'Slack channel id, DM channel id, or member id starting with U',
+            optional: false,
+            type: String
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :initial_comment,
+            env_name: 'ANISCO_SLACK_INITIAL_COMMENT',
+            description: 'Comment attached to uploaded file',
+            optional: true,
+            type: String
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :bot_api_token,
+            env_name: 'SLACK_API_TOKEN',
+            description: 'Slack bot token',
+            optional: true,
+            type: String
+          )
+        ]
+      end
+
+      def self.is_supported?(_platform)
+        true
+      end
+    end
+  end
+end
