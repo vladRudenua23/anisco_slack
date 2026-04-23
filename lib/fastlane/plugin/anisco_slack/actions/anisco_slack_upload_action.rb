@@ -38,7 +38,13 @@ module Fastlane
             key: :channel_ids,
             env_name: 'ANISCO_SLACK_CHANNEL_IDS',
             description: 'Slack channel id string or array of Slack channel ids, DM channel ids, or member ids starting with U',
-            optional: false
+            optional: false,
+            skip_type_validation: true,
+            verify_block: proc do |value|
+              next if value.is_a?(String) || value.is_a?(Array)
+
+              UI.user_error!('channel_ids must be a String or Array')
+            end
           ),
           FastlaneCore::ConfigItem.new(
             key: :initial_comment,
