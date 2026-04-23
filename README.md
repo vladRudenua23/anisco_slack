@@ -14,12 +14,20 @@ fastlane add_plugin anisco_slack
 
 Fastlane plugin for uploading APK, AAB, and IPA files to Slack channels or direct messages using Slack external upload API.
 
-The plugin accepts:
-- a Slack channel id such as `C...`
-- a DM channel id such as `D...`
-- a member id such as `U...`
+The plugin accepts arrays of:
+- Slack channel ids such as `C...`
+- DM channel ids such as `D...`
+- member ids such as `U...`
 
-When a member id is passed, the plugin resolves the DM channel automatically via `conversations.open`.
+When a member id is passed, the plugin resolves the DM channel
+automatically via `conversations.open`.
+
+The upload flow is:
+- request one upload URL via `files.getUploadURLExternal`
+- upload the binary once
+- iterate through `channel_ids`
+- resolve each id through `resolve_channel_id`
+- call `files.completeUploadExternal` for each resolved channel
 
 ## Example
 
@@ -35,18 +43,18 @@ Use the action in your `Fastfile`:
 lane :send_apk_to_slack do
   anisco_slack_upload(
     file_path: './build/app/outputs/flutter-apk/app-release.apk',
-    channel_id: 'U06GPN3P36C',
+    channel_ids: ['U06GPN3P36C', 'C06ABCDEF12'],
     initial_comment: 'New APK build'
   )
 end
 ```
 
-You can also pass a DM channel id directly:
+You can also pass DM channel ids directly:
 
 ```ruby
 anisco_slack_upload(
   file_path: './build/app/outputs/flutter-apk/app-release.apk',
-  channel_id: 'D0AU1SPLTGX',
+  channel_ids: ['D0AU1SPLTGX', 'D0AU1SPLTGY'],
   initial_comment: 'New APK build'
 )
 ```

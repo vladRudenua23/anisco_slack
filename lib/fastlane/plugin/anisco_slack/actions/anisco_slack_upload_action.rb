@@ -8,7 +8,7 @@ module Fastlane
         uploader = Helper::AniscoSlackHelper.new(params[:bot_api_token])
         uploader.upload_file(
           params[:file_path],
-          channel_id: params[:channel_id],
+          channel_ids: params[:channel_ids],
           initial_comment: params[:initial_comment]
         )
       end
@@ -22,7 +22,7 @@ module Fastlane
       end
 
       def self.details
-        'Accepts a Slack channel id, DM channel id, or member id starting with U and uploads the given build artifact using Slack external upload API'
+        'Accepts a Slack channel id string or a list of Slack channel ids, DM channel ids, or member ids starting with U and uploads the given build artifact using Slack external upload API'
       end
 
       def self.available_options
@@ -35,11 +35,10 @@ module Fastlane
             type: String
           ),
           FastlaneCore::ConfigItem.new(
-            key: :channel_id,
-            env_name: 'ANISCO_SLACK_CHANNEL_ID',
-            description: 'Slack channel id, DM channel id, or member id starting with U',
-            optional: false,
-            type: String
+            key: :channel_ids,
+            env_name: 'ANISCO_SLACK_CHANNEL_IDS',
+            description: 'Slack channel id string or array of Slack channel ids, DM channel ids, or member ids starting with U',
+            optional: false
           ),
           FastlaneCore::ConfigItem.new(
             key: :initial_comment,

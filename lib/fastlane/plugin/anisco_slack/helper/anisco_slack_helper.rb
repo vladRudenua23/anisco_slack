@@ -28,9 +28,9 @@ module Fastlane
         @bot_api_token = token
       end
 
-      def upload_file(file_path, channel_id:, initial_comment: nil)
+      def upload_file(file_path, channel_ids:, initial_comment: nil)
         SlackValidator.validate_file(file_path)
-        resolved_channel_id = resolve_channel_id(channel_id)
+        normalized_channel_ids = normalize_channel_ids(channel_ids)
         filename = File.basename(file_path)
         file_size = File.size(file_path)
         upload_data = get_upload_url(filename: filename, length: file_size)
@@ -40,15 +40,37 @@ module Fastlane
           file_path: file_path
         )
 
-        complete_upload(
-          file_id: upload_data['file_id'],
-          filename: filename,
-          channel_id: resolved_channel_id,
-          initial_comment: initial_comment
-        )
+        normalized_channel_ids.each do |channel_id|
+          complete_upload(
+            file_id: upload_data['file_id'],
+            filename: filename,
+            channel_id: resolve_channel_id(channel_id),
+            initial_comment: initial_comment
+          )
+        end
       end
 
       private
+
+      def normalize_channel_ids(channel_ids)
+        UI.user_error!('channel_ids is empty') if channel_ids.nil?
+
+        if channel_ids.is_a?(String)
+          normalized_channel_id = channel_ids.strip
+          UI.user_error!('channel_ids is empty') if normalized_channel_id.empty?
+          UI.user_error!('channel_ids string must contain exactly one channel id') if normalized_channel_id.match?(/[,\s;]/)
+
+          return [normalized_channel_id]
+        end
+
+        normalized_channel_ids = Array(channel_ids)
+          .map(&:to_s)
+          .map(&:strip)
+          .reject(&:empty?)
+        UI.user_error!('channel_ids is empty') if normalized_channel_ids.empty?
+
+        normalized_channel_ids
+      end
 
       def resolve_channel_id(channel_id)
         UI.user_error!('channel_id is empty') if channel_id.to_s.empty?
