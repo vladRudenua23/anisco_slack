@@ -126,14 +126,12 @@ module Fastlane
           file_path: file_path
         )
 
-        normalized_channel_ids.each do |channel_id|
-          complete_upload(
-            file_id: upload_data.file_id,
-            filename: filename,
-            channel_id: resolve_channel_id(channel_id),
-            initial_comment: initial_comment
-          )
-        end
+        complete_upload(
+          file_id: upload_data.file_id,
+          filename: filename,
+          channels: normalized_channel_ids.join(','),
+          initial_comment: initial_comment
+        )
       end
 
       private
@@ -244,7 +242,7 @@ module Fastlane
         UI.user_error!('Slack binary upload failed') unless response.success?
       end
 
-      def complete_upload(file_id:, filename:, channel_id:, initial_comment:)
+      def complete_upload(file_id:, filename:, channels:, initial_comment:)
         response = slack_api_connection.post('files.completeUploadExternal') do |request|
           request.headers['Content-Type'] = 'application/json; charset=utf-8'
           request.body = JSON.generate(
@@ -255,7 +253,7 @@ module Fastlane
                   'title' => filename
                 }
               ],
-              'channel_id' => channel_id,
+              'channels' => channels,
               'initial_comment' => initial_comment
             }.compact
           )
