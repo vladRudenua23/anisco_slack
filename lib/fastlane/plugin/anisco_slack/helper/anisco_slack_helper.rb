@@ -203,10 +203,13 @@ module Fastlane
 
       def get_upload_url(filename:, length:)
         response = slack_api_connection.post('files.getUploadURLExternal') do |request|
-          request.body = {
-            'filename' => filename,
-            'length' => length
-          }
+          request.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+          request.body = URI.encode_www_form(
+            {
+              'filename' => filename,
+              'length' => length
+            }
+          )
         end
 
         UI.user_error!('Slack returned empty response') if response.nil?
