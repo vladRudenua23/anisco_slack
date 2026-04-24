@@ -3,18 +3,17 @@ require_relative '../helper/anisco_slack_helper'
 
 module Fastlane
   module Actions
-    class AniscoSlackUploadAction < Action
+    class AniscoSlackMessageAction < Action
       def self.run(params)
         uploader = Helper::AniscoSlackHelper.new(params[:bot_api_token])
-        uploader.upload_file(
-          params[:file_path],
-          channel_ids: params[:channel_ids],
-          initial_comment: params[:initial_comment]
+        uploader.post_message(
+          params[:message],
+          channel_ids: params[:channel_ids]
         )
       end
 
       def self.description
-        'Upload APK, AAB, and IPA files to Slack channels or direct messages using Slack external upload API'
+        'Send a text message to Slack channels or direct messages using chat.postMessage'
       end
 
       def self.authors
@@ -22,15 +21,15 @@ module Fastlane
       end
 
       def self.details
-        'Accepts a Slack channel id string or a list of Slack channel ids, DM channel ids, or member ids starting with U and uploads the given build artifact using Slack external upload API'
+        'Accepts a Slack channel id string or a list of Slack channel ids, DM channel ids, or member ids starting with U and sends the given message using Slack chat.postMessage'
       end
 
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
-            key: :file_path,
-            env_name: 'ANISCO_SLACK_FILE_PATH',
-            description: 'Path to file for upload',
+            key: :message,
+            env_name: 'ANISCO_SLACK_MESSAGE',
+            description: 'Text message to send',
             optional: false,
             type: String
           ),
@@ -45,13 +44,6 @@ module Fastlane
 
               UI.user_error!('channel_ids must be a String or Array')
             end
-          ),
-          FastlaneCore::ConfigItem.new(
-            key: :initial_comment,
-            env_name: 'ANISCO_SLACK_INITIAL_COMMENT',
-            description: 'Comment attached to uploaded file',
-            optional: true,
-            type: String
           ),
           FastlaneCore::ConfigItem.new(
             key: :bot_api_token,

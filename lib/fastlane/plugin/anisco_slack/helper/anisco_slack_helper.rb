@@ -95,6 +95,10 @@ module Fastlane
         UI.user_error!("File not found: #{file_path}") unless File.exist?(file_path)
       end
 
+      def self.validate_message(message)
+        UI.user_error!('message is empty') if message.to_s.strip.empty?
+      end
+
       def self.validate_token(token)
         UI.user_error!('Token is empty') if token.to_s.empty?
         UI.user_error!("token must have xoxb") unless token.match?(/xoxb-/)
@@ -132,6 +136,18 @@ module Fastlane
           channels: normalized_channel_ids.join(','),
           initial_comment: initial_comment
         )
+      end
+
+      def post_message(message, channel_ids:)
+        SlackValidator.validate_message(message)
+        normalized_channel_ids = normalize_channel_ids(channel_ids)
+
+        normalized_channel_ids.each do |channel_id|
+          post_message_to_channel(
+            message: message,
+            channel_id: channel_id
+          )
+        end
       end
 
       private
@@ -267,6 +283,29 @@ module Fastlane
         end
 
         UI.user_error!("Slack completeUploadExternal failed: #{api_response.data.error}") unless api_response.ok
+
+        api_response
+      end
+
+      def post_message_to_channel(message:, channel_id:)
+        response = slack_api_connection.post('chat.postMessage') do |request|
+          request.headers['Content-Type'] = 'application/json; charset=utf-8'
+          request.body = JSON.generate(
+            {
+              'channel' => channel_id,
+              'text' => message
+            }
+          )
+        end
+
+        UI.user_error!('Slack returned empty response') if response.nil?
+        body = parse_json(response.body)
+
+        api_response = Api::Response.from_hash(body) do |ok, data|
+          ok ? body : Api::Error.from_hash(data)
+        end
+
+        UI.user_error!("Slack chat.postMessage failed: #{api_response.data.error}") unless api_response.ok
 
         api_response
       end
